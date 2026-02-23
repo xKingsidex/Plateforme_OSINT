@@ -1,0 +1,34 @@
+═══════════════════════════════════════════════════════════════
+📂 DIFFÉRENCES ENTRE LES 2 DOSSIERS
+═══════════════════════════════════════════════════════════════
+
+📂 Plateforme_OSINT/          ← Version de BASE (Scripts CLI)
+   ├── Scripts Python individuels
+   ├── Utilisable directement en ligne de commande
+   ├── osint_person_search.py
+   ├── osint_social_search.py
+   └── Étape par étape, apprentissage progressif
+
+📂 Plateforme_OSINT_Web/      ← Version WEB (Cette version)
+   ├── Interface web moderne (HTML/CSS/JS)
+   ├── API REST (FastAPI)
+   ├── Docker Compose
+   ├── PostgreSQL + Redis
+   ├── Dashboard interactif
+   ├── Export JSON/HTML
+   └── TOUS les modules CLI intégrés
+
+═══════════════════════════════════════════════════════════════
+🚀 DÉMARRAGE RAPIDE
+═══════════════════════════════════════════════════════════════
+
+Version CLI (Plateforme_OSINT/):
+  $ cd Plateforme_OSINT/
+  $ python3 osint_person_search.py john@example.com
+
+Version WEB (Plateforme_OSINT_Web/):
+  $ cd Plateforme_OSINT_Web/
+  $ ./start.sh
+  → Ouvrir http://localhost:3000
+
+═══════════════════════════════════════════════════════════════
