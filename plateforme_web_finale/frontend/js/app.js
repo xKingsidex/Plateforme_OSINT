@@ -1,68 +1,101 @@
 /**
  * ═══════════════════════════════════════════════════════════════
- * OSINT Platform - Main Application
- * Logique principale de l'interface utilisateur
+ * OSINT INTELLIGENCE PLATFORM - Main Application
+ * Enhanced UI Logic with Toast Notifications
  * ═══════════════════════════════════════════════════════════════
  */
 
-// État de l'application
+// Application state
 let currentResults = null;
 
 // ═══════════════════════════════════════════════════════════════
-// INITIALISATION
+// INITIALIZATION
 // ═══════════════════════════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🔍 OSINT Platform - Initialized');
+    console.log('🎯 OSINT Intelligence Platform - Initialized');
 
-    // Vérifier la connexion à l'API
+    // Check API health
     checkAPIHealth();
 
-    // Attacher les event listeners
+    // Setup event listeners
     setupEventListeners();
+
+    // Initialize tooltips and animations
+    initializeUI();
 });
 
 /**
- * Vérifie que l'API backend est accessible
+ * Check if API backend is reachable
  */
 async function checkAPIHealth() {
     try {
         await apiClient.healthCheck();
         console.log('✅ API Backend is healthy');
+        showToast('API Backend Connected', 'success');
     } catch (error) {
         console.error('❌ API Backend is not reachable:', error);
-        showError('Impossible de se connecter au backend. Assurez-vous que le serveur est démarré.');
+        showToast('API Backend Connection Failed', 'error');
     }
 }
 
 /**
- * Configure les event listeners
+ * Setup all event listeners
  */
 function setupEventListeners() {
     const searchForm = document.getElementById('searchForm');
     const searchInput = document.getElementById('searchInput');
 
-    // Soumission du formulaire
+    // Form submission
     searchForm.addEventListener('submit', handleSearch);
 
-    // Détection automatique pendant la saisie (debounced)
+    // Auto-detection with debounce
     let detectTimeout;
     searchInput.addEventListener('input', (e) => {
         clearTimeout(detectTimeout);
         detectTimeout = setTimeout(() => {
             if (e.target.value.trim().length > 2) {
                 detectInputType(e.target.value.trim());
+            } else {
+                // Hide detection panel if input is too short
+                document.getElementById('detectionInfo').classList.add('hidden');
             }
         }, 500);
+    });
+
+    // Enhanced input effects
+    searchInput.addEventListener('focus', () => {
+        searchInput.parentElement.classList.add('focused');
+    });
+
+    searchInput.addEventListener('blur', () => {
+        searchInput.parentElement.classList.remove('focused');
+    });
+}
+
+/**
+ * Initialize UI enhancements
+ */
+function initializeUI() {
+    // Add smooth scroll behavior
+    document.documentElement.style.scrollBehavior = 'smooth';
+
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + K to focus search
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
+        }
     });
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RECHERCHE
+// SEARCH FUNCTIONALITY
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Gère la soumission du formulaire de recherche
+ * Handle search form submission
  */
 async function handleSearch(event) {
     event.preventDefault();
@@ -72,36 +105,37 @@ async function handleSearch(event) {
     const query = searchInput.value.trim();
 
     if (!query) {
-        showError('Veuillez entrer une requête de recherche');
+        showToast('Please enter a search query', 'warning');
         return;
     }
 
-    // Afficher le loading
+    // Show loading state
     showLoading(true);
     hideResults();
 
     try {
-        // Lancer la recherche
-        console.log(`🔍 Searching for: ${query}`);
+        console.log(`🔍 Executing search for: ${query}`);
+
         const results = await apiClient.search(query, {
             deepSearch: deepSearch.checked
         });
 
         currentResults = results;
 
-        // Afficher les résultats
+        // Display results
         displayResults(results);
+        showToast('Search completed successfully', 'success');
 
     } catch (error) {
         console.error('Search error:', error);
-        showError(`Erreur lors de la recherche: ${error.message}`);
+        showToast(`Search failed: ${error.message}`, 'error');
     } finally {
         showLoading(false);
     }
 }
 
 /**
- * Détecte le type d'input
+ * Detect input type automatically
  */
 async function detectInputType(query) {
     try {
@@ -113,11 +147,11 @@ async function detectInputType(query) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// AFFICHAGE
+// DISPLAY FUNCTIONS
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Affiche les informations de détection
+ * Display detection information
  */
 function displayDetection(detection) {
     const detectionInfo = document.getElementById('detectionInfo');
@@ -129,15 +163,15 @@ function displayDetection(detection) {
         return;
     }
 
-    // Afficher les types détectés
+    // Display detected types
     detectionTypes.innerHTML = detection.detected_types
-        .map(type => `<span class="type-badge">${type}</span>`)
+        .map(type => `<span class="type-badge">${formatTypeName(type)}</span>`)
         .join('');
 
-    // Afficher les suggestions
+    // Display suggestions
     if (detection.suggestions && detection.suggestions.length > 0) {
         detectionSuggestions.innerHTML = `
-            <strong>Suggestions:</strong>
+            <strong>Recommended searches:</strong>
             <ul>
                 ${detection.suggestions.map(s => `<li>${s}</li>`).join('')}
             </ul>
@@ -150,66 +184,90 @@ function displayDetection(detection) {
 }
 
 /**
- * Affiche les résultats de la recherche
+ * Display search results
  */
 function displayResults(results) {
     const resultsSection = document.getElementById('resultsSection');
 
-    // Afficher le résumé
+    // Display summary stats
     displaySummary(results.summary);
 
-    // Afficher les résultats détaillés
+    // Display key findings
+    displayKeyFindings(results.summary);
+
+    // Display detailed results
     displayDetailedResults(results.results);
 
-    // Afficher la section
+    // Show results section
     resultsSection.classList.remove('hidden');
 
-    // Scroller vers les résultats
-    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Smooth scroll to results
+    setTimeout(() => {
+        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
 }
 
 /**
- * Affiche le résumé des résultats
+ * Display summary statistics
  */
 function displaySummary(summary) {
     document.getElementById('totalSources').textContent = summary.total_sources || 0;
     document.getElementById('successfulSources').textContent = summary.successful || 0;
     document.getElementById('failedSources').textContent = summary.failed || 0;
 
-    // Afficher les découvertes clés
+    // Animate numbers
+    animateValue('totalSources', 0, summary.total_sources || 0, 1000);
+    animateValue('successfulSources', 0, summary.successful || 0, 1000);
+    animateValue('failedSources', 0, summary.failed || 0, 1000);
+}
+
+/**
+ * Display key findings
+ */
+function displayKeyFindings(summary) {
     const keyFindings = document.getElementById('keyFindings');
 
     if (summary.key_findings && summary.key_findings.length > 0) {
-        keyFindings.innerHTML = `
-            <h3>🔑 Découvertes clés</h3>
-            ${summary.key_findings.map(finding => `
-                <div class="finding ${finding.type}">
-                    <strong>${finding.source}:</strong> ${finding.message}
-                </div>
-            `).join('')}
-        `;
+        keyFindings.innerHTML = summary.key_findings.map((finding, index) => `
+            <div class="finding ${finding.type}" style="animation-delay: ${index * 0.1}s">
+                <strong>${formatSourceName(finding.source)}:</strong> ${finding.message}
+            </div>
+        `).join('');
     } else {
-        keyFindings.innerHTML = '<p>Aucune découverte majeure</p>';
+        keyFindings.innerHTML = '';
     }
 }
 
 /**
- * Affiche les résultats détaillés
+ * Display detailed results
  */
 function displayDetailedResults(results) {
     const detailedResults = document.getElementById('detailedResults');
 
     if (!results.sources || Object.keys(results.sources).length === 0) {
-        detailedResults.innerHTML = '<p>Aucun résultat trouvé</p>';
+        detailedResults.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <svg style="width: 64px; height: 64px; margin-bottom: 1rem; opacity: 0.5;" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <p>No results found for this query</p>
+            </div>
+        `;
         return;
     }
 
     const html = Object.entries(results.sources)
         .map(([source, data]) => {
             const status = data.status === 'failed' ? '❌' : '✅';
+            const statusClass = data.status === 'failed' ? 'status-failed' : 'status-success';
+
             return `
-                <div class="result-item">
+                <div class="result-item ${statusClass}">
                     <h3>${status} ${formatSourceName(source)}</h3>
+                    ${data.status === 'failed' && data.error ? `
+                        <p style="color: var(--cyber-error); margin: 0.5rem 0;">${data.error}</p>
+                    ` : ''}
                     <div class="result-data">
                         <pre>${JSON.stringify(data, null, 2)}</pre>
                     </div>
@@ -222,29 +280,46 @@ function displayDetailedResults(results) {
 }
 
 /**
- * Formate le nom d'une source
+ * Format source name for display
  */
 function formatSourceName(source) {
     const names = {
-        'hunter_verify': 'Hunter.io - Vérification Email',
-        'hunter_find': 'Hunter.io - Recherche Email',
-        'hibp': 'Have I Been Pwned',
-        'github': 'GitHub',
-        'virustotal': 'VirusTotal',
-        'shodan': 'Shodan',
-        'social_media': 'Réseaux Sociaux',
-        'sherlock': 'Sherlock'
+        'hunter_verify': '🔍 Hunter.io - Email Verification',
+        'hunter_find': '🔍 Hunter.io - Email Finder',
+        'hibp': '🔒 Have I Been Pwned',
+        'github': '💻 GitHub Profile',
+        'virustotal': '🛡️ VirusTotal',
+        'shodan': '🌐 Shodan',
+        'social_media': '📱 Social Media',
+        'sherlock': '🕵️ Sherlock Username Search'
     };
 
-    return names[source] || source.toUpperCase();
+    return names[source] || `📊 ${source.toUpperCase()}`;
+}
+
+/**
+ * Format type name for badges
+ */
+function formatTypeName(type) {
+    const names = {
+        'email': '📧 Email',
+        'phone': '📱 Phone',
+        'username': '👤 Username',
+        'ip': '🌐 IP Address',
+        'domain': '🌍 Domain',
+        'url': '🔗 URL',
+        'person': '👤 Person Name'
+    };
+
+    return names[type] || type;
 }
 
 // ═══════════════════════════════════════════════════════════════
-// UTILITAIRES UI
+// UI UTILITIES
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Affiche/cache le loading
+ * Show/hide loading overlay
  */
 function showLoading(show) {
     const loadingOverlay = document.getElementById('loadingOverlay');
@@ -266,7 +341,7 @@ function showLoading(show) {
 }
 
 /**
- * Cache les résultats
+ * Hide results section
  */
 function hideResults() {
     const resultsSection = document.getElementById('resultsSection');
@@ -274,22 +349,77 @@ function hideResults() {
 }
 
 /**
- * Affiche une erreur
+ * Show toast notification
  */
-function showError(message) {
-    alert(`❌ Erreur: ${message}`);
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer');
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+
+    const colors = {
+        success: 'var(--cyber-success)',
+        error: 'var(--cyber-error)',
+        warning: 'var(--cyber-warning)',
+        info: 'var(--cyber-primary)'
+    };
+
+    toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.5rem;">${icons[type]}</span>
+            <span style="flex: 1; color: var(--text-primary);">${message}</span>
+        </div>
+    `;
+
+    toast.style.borderLeft = `4px solid ${colors[type]}`;
+
+    toastContainer.appendChild(toast);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => {
+            toastContainer.removeChild(toast);
+        }, 300);
+    }, 5000);
+}
+
+/**
+ * Animate number counter
+ */
+function animateValue(elementId, start, end, duration) {
+    const element = document.getElementById(elementId);
+    const range = end - start;
+    const increment = range / (duration / 16);
+    let current = start;
+
+    const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+            current = end;
+            clearInterval(timer);
+        }
+        element.textContent = Math.floor(current);
+    }, 16);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// EXPORT
+// EXPORT FUNCTIONS
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Exporte les résultats en JSON
+ * Export results as JSON
  */
 function exportJSON() {
     if (!currentResults) {
-        showError('Aucun résultat à exporter');
+        showToast('No results to export', 'warning');
         return;
     }
 
@@ -300,46 +430,144 @@ function exportJSON() {
     link.href = URL.createObjectURL(dataBlob);
     link.download = `osint_results_${Date.now()}.json`;
     link.click();
+
+    showToast('JSON export successful', 'success');
 }
 
 /**
- * Exporte les résultats en HTML
+ * Export results as HTML
  */
 function exportHTML() {
     if (!currentResults) {
-        showError('Aucun résultat à exporter');
+        showToast('No results to export', 'warning');
         return;
     }
 
     const html = `
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OSINT Results - ${currentResults.query}</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
-        h1 { color: #2563eb; }
-        .summary { background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; }
-        .result { background: white; border: 1px solid #e5e7eb; padding: 15px; margin: 10px 0; border-radius: 8px; }
-        pre { background: #1f2937; color: #f3f4f6; padding: 15px; border-radius: 8px; overflow-x: auto; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0e1a;
+            color: #e8edf4;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #00f7ff, #7d5fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .meta {
+            background: rgba(21, 27, 43, 0.7);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            border: 1px solid rgba(127, 95, 255, 0.2);
+        }
+        .meta-item { margin: 0.5rem 0; color: #a0aec0; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .stat-card {
+            background: rgba(21, 27, 43, 0.7);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(127, 95, 255, 0.2);
+        }
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #00f7ff;
+        }
+        .stat-label {
+            color: #a0aec0;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            margin-top: 0.5rem;
+        }
+        .result {
+            background: rgba(21, 27, 43, 0.7);
+            border: 1px solid rgba(127, 95, 255, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .result h3 {
+            color: #00f7ff;
+            margin-bottom: 1rem;
+        }
+        pre {
+            background: #0f1420;
+            border: 1px solid rgba(127, 95, 255, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: #a0aec0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(127, 95, 255, 0.2);
+            color: #64748b;
+        }
     </style>
 </head>
 <body>
-    <h1>🔍 OSINT Results</h1>
-    <div class="summary">
-        <h2>Query: ${currentResults.query}</h2>
-        <p>Types: ${currentResults.detected_types.join(', ')}</p>
-        <p>Timestamp: ${currentResults.timestamp}</p>
-    </div>
-    <h2>Results</h2>
-    ${Object.entries(currentResults.results.sources)
-        .map(([source, data]) => `
-            <div class="result">
-                <h3>${formatSourceName(source)}</h3>
-                <pre>${JSON.stringify(data, null, 2)}</pre>
+    <div class="container">
+        <h1>🎯 OSINT Intelligence Report</h1>
+
+        <div class="meta">
+            <div class="meta-item"><strong>Query:</strong> ${currentResults.query}</div>
+            <div class="meta-item"><strong>Types:</strong> ${currentResults.detected_types.join(', ')}</div>
+            <div class="meta-item"><strong>Timestamp:</strong> ${currentResults.timestamp}</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value">${currentResults.summary.total_sources || 0}</div>
+                <div class="stat-label">Total Sources</div>
             </div>
-        `).join('')}
+            <div class="stat-card">
+                <div class="stat-value" style="color: #00ff9d">${currentResults.summary.successful || 0}</div>
+                <div class="stat-label">Successful</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #ff3366">${currentResults.summary.failed || 0}</div>
+                <div class="stat-label">Failed</div>
+            </div>
+        </div>
+
+        <h2 style="margin: 2rem 0 1rem; color: #00f7ff;">Detailed Results</h2>
+        ${Object.entries(currentResults.results.sources)
+            .map(([source, data]) => `
+                <div class="result">
+                    <h3>${formatSourceName(source)}</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `).join('')}
+
+        <div class="footer">
+            <p>Generated by OSINT Intelligence Platform</p>
+            <p>Report Date: ${new Date().toLocaleString()}</p>
+        </div>
+    </div>
 </body>
 </html>
     `;
@@ -347,6 +575,21 @@ function exportHTML() {
     const dataBlob = new Blob([html], { type: 'text/html' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(dataBlob);
-    link.download = `osint_results_${Date.now()}.html`;
+    link.download = `osint_report_${Date.now()}.html`;
     link.click();
+
+    showToast('HTML report exported successfully', 'success');
 }
+
+// ═══════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS INFO
+// ═══════════════════════════════════════════════════════════════
+
+console.log(`
+╔═══════════════════════════════════════════════════════════════╗
+║         OSINT INTELLIGENCE PLATFORM - KEYBOARD SHORTCUTS      ║
+╠═══════════════════════════════════════════════════════════════╣
+║  Ctrl/Cmd + K  │  Focus search input                          ║
+║  Enter         │  Execute search                              ║
+╚═══════════════════════════════════════════════════════════════╝
+`);
