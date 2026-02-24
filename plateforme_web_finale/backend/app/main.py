@@ -12,8 +12,8 @@ from typing import Optional, Dict, List
 import uvicorn
 from datetime import datetime
 
-from app.services.detector import InputDetector
-from app.services.aggregator import OSINTAggregator
+from services.detector import InputDetector
+from services.aggregator import OSINTAggregator
 
 # ═══════════════════════════════════════════════════════════════
 # FASTAPI APP

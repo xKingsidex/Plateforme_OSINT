@@ -12,10 +12,16 @@ from typing import Dict, List, Optional
 from datetime import datetime
 
 # Ajouter le répertoire parent au path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
+backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))
+sys.path.insert(0, backend_dir)
 
 # Import du nouveau moteur OSINT avancé
-from services.osint.advanced_osint_engine import AdvancedOSINTEngine
+try:
+    from services.osint.advanced_osint_engine import AdvancedOSINTEngine
+except ImportError:
+    # Si pas dans le bon path, essayer le chemin absolu
+    sys.path.insert(0, os.path.join(backend_dir, 'backend'))
+    from services.osint.advanced_osint_engine import AdvancedOSINTEngine
 
 # Imports des modules existants (fallback)
 try:

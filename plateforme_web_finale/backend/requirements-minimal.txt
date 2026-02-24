@@ -1,0 +1,27 @@
+# ═══════════════════════════════════════════════════════════════
+# REQUIREMENTS MINIMAL - Pour tester la plateforme rapidement
+# ═══════════════════════════════════════════════════════════════
+
+# API Framework (OBLIGATOIRE)
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-multipart==0.0.6
+
+# HTTP & Scraping (OBLIGATOIRE)
+requests==2.31.0
+aiohttp==3.9.0
+beautifulsoup4==4.12.2
+
+# Utils (OBLIGATOIRE)
+python-dotenv==1.0.0
+
+# OSINT Tools déjà installés via pip
+# holehe (installé séparément)
+# sherlock-project (installé séparément)
+# maigret (installé séparément)
+
+# Optionnel mais recommandé
+phonenumbers==8.13.26
+dnspython==2.4.2
