@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT Intel Platform [CLASSIFIED]</title>
+    <link rel="stylesheet" href="css/style_pro.css">
+</head>
+<body>
+    <!-- Matrix Background Animation -->
+    <canvas id="matrixCanvas"></canvas>
+    
+    <!-- Scanline Effect -->
+    <div class="scanline"></div>
+    
+    <!-- Main Terminal -->
+    <div class="terminal-container">
+        
+        <!-- ASCII Art Header -->
+        <pre class="ascii-art">
+ ██████╗ ███████╗██╗███╗   ██╗████████╗    ██████╗ ██████╗  ██████╗ 
+██╔═══██╗██╔════╝██║████╗  ██║╚══██╔══╝    ██╔══██╗██╔══██╗██╔═══██╗
+██║   ██║███████╗██║██╔██╗ ██║   ██║       ██████╔╝██████╔╝██║   ██║
+██║   ██║╚════██║██║██║╚██╗██║   ██║       ██╔═══╝ ██╔══██╗██║   ██║
+╚██████╔╝███████║██║██║ ╚████║   ██║       ██║     ██║  ██║╚██████╔╝
+ ╚═════╝ ╚══════╝╚═╝╚═╝  ╚═══╝   ╚═╝       ╚═╝     ╚═╝  ╚═╝ ╚═════╝ 
+                                                                      
+    [CLASSIFIED] Intelligence Gathering System v3.0-PRO
+    Powered by: Sherlock · Holehe · Socialscan · Professional APIs
+        </pre>
+        
+        <!-- System Status -->
+        <div class="system-status">
+            <div class="status-line">
+                <span class="status-label">SYSTEM STATUS:</span>
+                <span class="status-value blink" id="systemStatus">OPERATIONAL</span>
+            </div>
+            <div class="status-line">
+                <span class="status-label">API BACKEND:</span>
+                <span class="status-value" id="apiStatus">CONNECTING...</span>
+            </div>
+            <div class="status-line">
+                <span class="status-label">OSINT TOOLS:</span>
+                <span class="status-value">SHERLOCK ✓ HOLEHE ✓ SOCIALSCAN ✓</span>
+            </div>
+            <div class="status-line">
+                <span class="status-label">SECURITY LEVEL:</span>
+                <span class="status-value text-warning">TOP SECRET</span>
+            </div>
+        </div>
+        
+        <!-- Command Input -->
+        <div class="command-section">
+            <div class="command-prompt">
+                <span class="prompt-symbol">root@osint-platform:~#</span>
+                <form id="searchForm">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="terminal-input" 
+                        placeholder="Enter target (email, username, phone, domain)..."
+                        autocomplete="off"
+                        spellcheck="false"
+                    />
+                </form>
+            </div>
+            
+            <!-- Options -->
+            <div class="command-options">
+                <label class="terminal-checkbox">
+                    <input type="checkbox" id="deepSearch" />
+                    <span>[DEEP SCAN] Enable Sherlock 300+ sites (slower)</span>
+                </label>
+                <label class="terminal-checkbox">
+                    <input type="checkbox" id="professionalTools" checked />
+                    <span>[PRO TOOLS] Use Holehe + Socialscan</span>
+                </label>
+            </div>
+            
+            <!-- Detection Banner -->
+            <div class="detection-banner" id="detectionBanner" style="display:none;">
+                <span class="banner-label">[TARGET DETECTED]</span>
+                <span class="banner-types" id="detectedTypes"></span>
+            </div>
+        </div>
+        
+        <!-- Terminal Output -->
+        <div class="terminal-output" id="terminalOutput">
+            <div class="output-line text-success">
+                [✓] OSINT Intelligence Platform initialized
+            </div>
+            <div class="output-line text-muted">
+                [i] Type target identifier and press ENTER to begin reconnaissance
+            </div>
+            <div class="output-line text-muted">
+                [i] Supported: EMAIL | USERNAME | PHONE | DOMAIN | IP
+            </div>
+            <div class="output-line">
+                [~] Awaiting command input...
+            </div>
+        </div>
+        
+        <!-- Results Display -->
+        <div class="results-container" id="resultsContainer" style="display:none;">
+            
+            <!-- Stats Grid -->
+            <div class="stats-grid" id="statsGrid"></div>
+            
+            <!-- Detailed Results -->
+            <div class="result-sections" id="resultSections"></div>
+            
+            <!-- Raw Data -->
+            <div class="terminal-section">
+                <div class="section-header">
+                    [RAW DATA EXPORT]
+                    <button class="terminal-btn" id="copyBtn">[COPY]</button>
+                    <button class="terminal-btn" id="downloadBtn">[DOWNLOAD JSON]</button>
+                </div>
+                <pre class="json-output" id="rawJsonData"></pre>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="terminal-footer">
+            <span class="footer-text">
+                [⚠] FOR AUTHORIZED INTELLIGENCE OPERATIONS ONLY
+            </span>
+            <span class="footer-timestamp" id="timestamp"></span>
+        </div>
+        
+    </div>
+    
+    <script src="js/app_pro.js"></script>
+    <script src="js/matrix.js"></script>
+</body>
+</html>
