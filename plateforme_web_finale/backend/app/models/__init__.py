@@ -1,3 +1,0 @@
-"""
-OSINT Platform Database Models
-"""

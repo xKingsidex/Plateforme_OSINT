@@ -1,3 +1,0 @@
-"""
-OSINT Platform API Routes
-"""
